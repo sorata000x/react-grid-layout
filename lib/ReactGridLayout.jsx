@@ -265,6 +265,9 @@ export default class ReactGridLayout extends React.Component<Props, State> {
    * @param {Number} y Y position of the move
    * @param {Event} e The mousedown event
    * @param {Element} node The current dragging DOM element
+   *
+   * MODIFIED:
+   *  - Increase cols to prevent exceed maxRows
    */
   onDrag: (i: string, x: number, y: number, GridDragEvent) => void = (
     i,
@@ -303,11 +306,19 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     );
 
     this.props.onDrag(layout, oldDragItem, l, placeholder, e, node);
+    
+    // at this stage there could be y > 0, so fix it by increasing the cols
+    layer.forEach((i,index) => { 
+      if(i.y > 0){ 
+        l[index].x += i.y; 
+        l[index].y = 0; 
+        this.setState({cols: this.state.cols + i.y}); 
+    }})
 
     this.setState({
       layout: allowOverlap
         ? layout
-        : compact(layout, compactType(this.props), cols),
+        : compact(layout, compactType(this.props), this.state.cols), // this.state.cols will probably be updated here.
       activeDrag: placeholder
     });
   };
